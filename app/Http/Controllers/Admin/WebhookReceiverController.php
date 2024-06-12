@@ -258,6 +258,7 @@ class WebhookReceiverController extends Controller
         } catch (Exception $e) {
             $msg = 'File:' . $e->getFile() . ' | Line:' . $e->getLine() . ' | Message:' . $e->getMessage();
             \Log::info('store new lead:- ' . $msg);
+
             //return response()->json(['message' => __('messages.something_went_wrong')], 404);
         }
     }

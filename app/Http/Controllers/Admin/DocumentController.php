@@ -209,6 +209,7 @@ class DocumentController extends Controller
         if(!auth()->user()->checkPermission('document_delete')){
             abort(403, 'Unauthorized.');
         }
+//         abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         $documents = Document::whereIn('id', request('ids'))
                     ->get();
