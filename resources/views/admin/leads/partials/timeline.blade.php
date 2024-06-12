@@ -20,6 +20,12 @@
                                     bg-info
                                 @elseif($event->event_type == 'document_sent')
                                     bg-dark
+                                @elseif($event->event_type == 'expression_of_interest')
+                                    bg-success
+                                @elseif($event->event_type == 'lead_updated')
+                                    bg-info
+                                @elseif($event->event_type == 'lead_requirement_updated')
+                                    bg-olive
                                 @else
                                     bg-olive
                                 @endif">
@@ -45,6 +51,12 @@
                             <i class="far fa-sticky-note bg-info"></i>
                         @elseif($event->event_type == 'document_sent')
                             <i class="fas fa-file-alt bg-dark"></i>
+                        @elseif($event->event_type == 'expression_of_interest')
+                            <i class="fas fa-wind bg-success"></i>
+                        @elseif($event->event_type == 'lead_updated')
+                            <i class="fas fa-user-edit bg-info"></i>
+                        @elseif($event->event_type == 'lead_requirement_updated')
+                            <i class="fas fa-pen-square bg-olive"></i>
                         @else
                             <i class="far fa-check-circle bg-olive"></i>
                         @endif
@@ -69,6 +81,12 @@
                                     text-info
                                 @elseif($event->event_type == 'document_sent')
                                     text-dark
+                                @elseif($event->event_type == 'expression_of_interest')
+                                    text-success
+                                @elseif($event->event_type == 'lead_updated')
+                                    text-info
+                                @elseif($event->event_type == 'lead_requirement_updated')
+                                    text-olive
                                 @else
                                     text-olive
                                 @endif">
@@ -96,6 +114,12 @@
                                 @includeIf('admin.leads.partials.event_details.note_added')
                             @elseif($event->event_type == 'document_sent')
                                 @includeIf('admin.leads.partials.event_details.document_sent')
+                            @elseif($event->event_type == 'expression_of_interest')
+                                @includeIf('admin.leads.partials.event_details.expression_of_interest', ['enable_header' => true])
+                            @elseif($event->event_type == 'lead_updated')
+                                @includeIf('admin.leads.partials.event_details.lead_updated')
+                            @elseif($event->event_type == 'lead_requirement_updated')
+                                @includeIf('admin.leads.partials.event_details.lead_requirement_updated')
                             @else
                                 {{json_encode($event->webhook_data ?? [])}}
                             @endif

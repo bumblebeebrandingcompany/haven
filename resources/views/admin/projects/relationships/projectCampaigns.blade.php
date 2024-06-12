@@ -1,8 +1,9 @@
 <div class="m-3">
     <div class="card">
-        @if(auth()->user()->is_superadmin)
+        @if (auth()->user()->checkPermission('campaign_create'))
             <div class="card-header">
-                <a class="btn btn-success float-right" href="{{ route('admin.campaigns.create', ['project_id' => $project->id]) }}">
+                <a class="btn btn-success float-right"
+                    href="{{ route('admin.campaigns.create', ['project_id' => $project->id]) }}">
                     {{ trans('global.add') }} {{ trans('cruds.campaign.title_singular') }}
                 </a>
             </div>
@@ -39,7 +40,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($campaigns as $key => $campaign)
+                        @foreach ($campaigns as $key => $campaign)
                             <tr data-entry-id="{{ $campaign->id }}">
                                 <td>
 
@@ -63,18 +64,27 @@
                                     {{ $campaign->created_at ?? '' }}
                                 </td>
                                 <td>
-                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.campaigns.show', $campaign->id) }}">
-                                        {{ trans('global.view') }}
-                                    </a>
-
-                                    <a class="btn btn-xs btn-info" href="{{ route('admin.campaigns.edit', $campaign->id) }}">
-                                        {{ trans('global.edit') }}
-                                    </a>
-                                    @if(auth()->user()->is_superadmin)
-                                        <form action="{{ route('admin.campaigns.destroy', $campaign->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
+                                    @if (auth()->user()->checkPermission('campaign_view'))
+                                        <a class="btn btn-xs btn-primary"
+                                            href="{{ route('admin.campaigns.show', $campaign->id) }}">
+                                            {{ trans('global.view') }}
+                                        </a>
+                                    @endif
+                                    @if (auth()->user()->checkPermission('campaign_edit'))
+                                        <a class="btn btn-xs btn-info"
+                                            href="{{ route('admin.campaigns.edit', $campaign->id) }}">
+                                            {{ trans('global.edit') }}
+                                        </a>
+                                    @endif
+                                    @if (auth()->user()->checkPermission('campaign_delete'))
+                                        <form action="{{ route('admin.campaigns.destroy', $campaign->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('{{ trans('global.areYouSure') }}');"
+                                            style="display: inline-block;">
                                             <input type="hidden" name="_method" value="DELETE">
                                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                            <input type="submit" class="btn btn-xs btn-danger" value="{{ trans('global.delete') }}">
+                                            <input type="submit" class="btn btn-xs btn-danger"
+                                                value="{{ trans('global.delete') }}">
                                         </form>
                                     @endif
                                 </td>
@@ -87,52 +97,69 @@
     </div>
 </div>
 @section('scripts')
-@parent
-<script>
-    $(function () {
-  let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-@if(auth()->user()->is_superadmin)
-  let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
-  let deleteButton = {
-    text: deleteButtonTrans,
-    url: "{{ route('admin.campaigns.massDestroy') }}",
-    className: 'btn-danger',
-    action: function (e, dt, node, config) {
-      var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
-          return $(entry).data('entry-id')
-      });
+    @parent
+    <script>
+        $(function() {
+            let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+            @if (auth()->user()->checkPermission('campaign_delete'))
+                let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
+                let deleteButton = {
+                    text: deleteButtonTrans,
+                    url: "{{ route('admin.campaigns.massDestroy') }}",
+                    className: 'btn-danger',
+                    action: function(e, dt, node, config) {
+                        var ids = $.map(dt.rows({
+                            selected: true
+                        }).nodes(), function(entry) {
+                            return $(entry).data('entry-id')
+                        });
 
-      if (ids.length === 0) {
-        alert('{{ trans('global.datatables.zero_selected') }}')
+                        if (ids.length === 0) {
+                            alert('{{ trans('global.datatables.zero_selected') }}')
 
-        return
-      }
+                            return
+                        }
 
-      if (confirm('{{ trans('global.areYouSure') }}')) {
-        $.ajax({
-          headers: {'x-csrf-token': _token},
-          method: 'POST',
-          url: config.url,
-          data: { ids: ids, _method: 'DELETE' }})
-          .done(function () { location.reload() })
-      }
-    }
-  }
-  dtButtons.push(deleteButton)
-@endif
+                        if (confirm('{{ trans('global.areYouSure') }}')) {
+                            $.ajax({
+                                    headers: {
+                                        'x-csrf-token': _token
+                                    },
+                                    method: 'POST',
+                                    url: config.url,
+                                    data: {
+                                        ids: ids,
+                                        _method: 'DELETE'
+                                    }
+                                })
+                                .done(function() {
+                                    location.reload()
+                                })
+                        }
+                    }
+                }
+                dtButtons.push(deleteButton)
+            @endif
 
-  $.extend(true, $.fn.dataTable.defaults, {
-    orderCellsTop: true,
-    order: [[ 1, 'desc' ]],
-    pageLength: 100,
-  });
-  let table = $('.datatable-projectCampaigns:not(.ajaxTable)').DataTable({ buttons: dtButtons })
-  $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-      $($.fn.dataTable.tables(true)).DataTable()
-          .columns.adjust();
-  });
-  
-})
+            $.extend(true, $.fn.dataTable.defaults, {
+                orderCellsTop: true,
+                order: [
+                    [1, 'desc']
+                ],
+                pageLength: 100,
+                scrollY: "300px",
+                scrollCollapse: true,
+                paging: false,
+                fixedHeader: true
+            });
+            let table = $('.datatable-projectCampaigns:not(.ajaxTable)').DataTable({
+                buttons: dtButtons
+            })
+            $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e) {
+                $($.fn.dataTable.tables(true)).DataTable()
+                    .columns.adjust();
+            });
 
-</script>
+        })
+    </script>
 @endsection

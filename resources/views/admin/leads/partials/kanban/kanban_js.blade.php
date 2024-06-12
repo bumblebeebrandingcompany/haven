@@ -1,5 +1,5 @@
 $(document).on('click', '#filter_leads', function() {
-    let url = generateUrl("{{route('admin.leads.index')}}", 'kanban');
+    let url = generateUrl("{{ route('admin.leads.lead', [$project->id]) }}", 'kanban');
     sessionStorage.setItem("leadListUrl", url);
     window.location = url;
 });

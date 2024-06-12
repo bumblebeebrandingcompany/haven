@@ -29,19 +29,25 @@
                 <label for="additional_email_key">
                     @lang('messages.additional_email_key')
                 </label>
-                <input type="email" name="additional_email" id="additional_email_key" value="{{ old('additional_email') ?? $lead->additional_email }}" class="form-control">
+                <input type="text" name="additional_email" id="additional_email_key" value="{{ old('additional_email') ?? $lead->additional_email }}" class="form-control">
             </div>
             <div class="form-group">
                 <label for="phone" @if(!auth()->user()->is_superadmin) class="required" @endif>
                     @lang('messages.phone')
                 </label>
                 <input type="text" name="phone" id="phone" value="{{ old('phone') ?? $lead->phone }}" class="form-control input_number" @if(!auth()->user()->is_superadmin) required @endif>
+                <span class="help-block text-muted">
+                    Enter phone number including country code without + sign.
+                </span>
             </div>
             <div class="form-group">
                 <label for="secondary_phone_key">
                     @lang('messages.secondary_phone_key')
                 </label>
-                <input type="text" name="secondary_phone" id="secondary_phone_key" value="{{ old('secondary_phone') ?? $lead->secondary_phone }}" class="form-control input_number">
+                <input type="text" name="secondary_phone" id="secondary_phone_key" value="{{ old('secondary_phone') ?? $lead->secondary_phone }}" class="form-control digit_with_comma">
+                <span class="help-block text-muted">
+                    Enter phone number including country code without + sign.
+                </span>
             </div>
             <div class="form-group">
                 <label class="required" for="project_id">{{ trans('cruds.lead.fields.project') }}</label>

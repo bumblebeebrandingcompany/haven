@@ -11,16 +11,16 @@ class StoreSourceRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        return auth()->user()->checkPermission('source_create');
     }
 
     public function rules()
     {
         return [
-            'project_id' => [
-                'required',
-                'integer',
-            ],
+            // 'project_id' => [
+            //     'required',
+            //     'integer',
+            // ],
             'campaign_id' => [
                 'required',
                 'integer',

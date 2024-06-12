@@ -11,7 +11,7 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize()
     {
-        return auth()->user()->is_superadmin || auth()->user()->is_channel_partner_manager;
+        return auth()->user()->checkPermission('user_create');
     }
 
     public function rules()
@@ -24,6 +24,9 @@ class StoreUserRequest extends FormRequest
             'email' => [
                 'required',
                 'unique:users',
+            ],
+            'sell_do_user_id' => [
+               'string'
             ],
             'password' => [
                 'required',

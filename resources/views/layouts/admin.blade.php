@@ -21,7 +21,6 @@
                     <a class="nav-link" data-widget="pushmenu" href="#"><i class="fa fa-bars"></i></a>
                 </li>
             </ul>
-
             <!-- Right navbar links -->
             @if(count(config('panel.available_languages', [])) > 1)
                 <ul class="navbar-nav ml-auto">
@@ -39,7 +38,6 @@
             @endif
 
         </nav>
-
         @include('partials.menu')
         <div class="content-wrapper" style="min-height: 917px;">
             <!-- Main content -->
@@ -53,7 +51,7 @@
                 @endif
                 @if($errors->count() > 0)
                     <div class="alert alert-danger">
-                        <ul class="list-unstyled">
+                        <ul class="list-unstyled mb-0 pb-0">
                             @foreach($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach

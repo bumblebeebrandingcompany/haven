@@ -40,6 +40,10 @@ return [
             'driver'   => 'session',
             'provider' => 'users',
         ],
+        'selldo' => [
+            'driver'   => 'session',
+            'provider' => 'selldo_users',
+        ],
 
         'api' => [
             'driver'   => 'token',
@@ -69,6 +73,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model'  => App\Models\User::class,
+        ],
+        'selldo_users' => [
+            'driver' => 'eloquent',
+            'model'  => App\Models\SelldoUser::class,
         ],
 
         // 'users' => [
