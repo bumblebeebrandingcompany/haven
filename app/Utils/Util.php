@@ -1321,25 +1321,6 @@ class Util
         }
     }
 
-    public function storeUniqueWebhookFieldsWhenCreatingWebhook($project)
-    {
-        $outgoing_apis = $project->outgoing_apis;
-        $fields = [];
-        foreach ($outgoing_apis as $outgoing_api) {
-            $body = $outgoing_api['request_body'] ?? [];
-            foreach ($body as $details) {
-                if (isset($details['value'])) {
-                    $fields[] = $details['value'];
-                }
-            }
-        }
-
-        $webhook_fields = !empty($project->webhook_fields) ? array_merge($project->webhook_fields, $fields) : $fields;
-        // $unique_webhook_fields = array_unique($webhook_fields);
-        // $project->webhook_fields = array_values($unique_webhook_fields);
-        $project->save();
-    }
-
     public function getClientProjects($id)
     {
         $projects = Project::where('client_id', $id)
@@ -1628,6 +1609,38 @@ class Util
             }
         }
         return $keysAndValues;
+    }
+
+    public function storeUniqueWebhookFieldsWhenCreatingWebhook($project)
+    {
+        $outgoing_apis = $project->outgoing_apis;
+        $fields = [];
+    
+        foreach ($outgoing_apis as &$outgoing_api) {
+            $body = $outgoing_api['request_body'] ?? [];
+            foreach ($body as $details) {
+                if (is_array($details['key']) && is_array($details['value']) && count($details['key']) === count($details['value'])) {
+                    foreach ($details['key'] as $index => $key) {
+                        if (isset($details['value'][$index])) {
+                            $fields[] = [
+                                'key' => $key,
+                                'value' => $details['value'][$index]
+                            ];
+                        }
+                    }
+                } elseif (isset($details['key'], $details['value'])) {
+                    $fields[] = [
+                        'key' => $details['key'],
+                        'value' => $details['value']
+                    ];
+                }
+            }
+            unset($outgoing_api['request_body']);
+            $outgoing_api['request_body'] = !empty($outgoing_api['request_body']) ? array_merge($outgoing_api['request_body'], $fields) : $fields;
+        }
+    
+        $project->outgoing_apis = $outgoing_apis;
+        $project->save();
     }
 
 }

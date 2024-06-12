@@ -141,10 +141,10 @@ class LeadsController extends Controller
             $input['inbox_fields'] = json_encode($inboxFields);
             $input['sell_do_fields'] = json_encode($sellDoFields);
             
-            $subsource = SubSource::where('id', $input['sub_source_id'])->first();
+            $subsource = SubSource::where('id', $request['sub_source_id'])->first();
             $campaign = Source::where('project_id', $source->source_id)->first();
             $lead = Lead::create($input);
-            $lead->sub_source_id = $input['sub_source_id'];
+            $lead->subsource_id = $request['sub_source_id'];
             $lead->source_id = @$campaign->id;
             $lead->campaign_id = @$campaign->campaign_id;
             $lead->ref_num = $this->util->generateLeadRefNum($lead);
