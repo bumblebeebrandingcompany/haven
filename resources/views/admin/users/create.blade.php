@@ -57,21 +57,21 @@
             </div> -->
             <div class="form-group">
                 <label class="required">{{ trans('cruds.user.fields.user_type') }}</label>
-                @foreach(App\Models\User::USER_TYPE_RADIO as $key => $label)
-                    @if(!auth()->user()->is_channel_partner_manager)
-                        <div class="form-check {{ $errors->has('user_type') ? 'is-invalid' : '' }}">
-                            <input class="form-check-input user_type_input" type="radio" id="user_type_{{ $key }}" name="user_type" value="{{ $key }}" {{ old('user_type', '') === (string) $key ? 'checked' : '' }} required>
-                            <label class="form-check-label" for="user_type_{{ $key }}">{{ $label }}</label>
-                        </div>
-                    @else
-                        @if($key == 'ChannelPartner')
-                            <div class="form-check {{ $errors->has('user_type') ? 'is-invalid' : '' }}">
-                                <input class="form-check-input user_type_input" type="radio" id="user_type_{{ $key }}" name="user_type" value="{{ $key }}" checked required>
-                                <label class="form-check-label" for="user_type_{{ $key }}">{{ $label }}</label>
-                            </div>
+                <select class="form-control user_type_input select2 {{ $errors->has('user_type') ? 'is-invalid' : '' }}" name="user_type" id="user_type" required>
+                    @foreach(App\Models\User::USER_TYPE_RADIO as $key => $label)
+                        @if(!auth()->user()->is_channel_partner_manager)
+                            <option value="{{ $key }}" {{ old('user_type', '') === (string) $key ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @else
+                            @if($key == 'ChannelPartner')
+                                <option value="{{ $key }}" selected>
+                                    {{ $label }}
+                                </option>
+                            @endif
                         @endif
-                    @endif
-                @endforeach
+                    @endforeach
+                </select>
                 @if($errors->has('user_type'))
                     <span class="text-danger">{{ $errors->first('user_type') }}</span>
                 @endif
@@ -93,6 +93,7 @@
                 @endif
                 <span class="help-block">{{ trans('cruds.user.fields.contact_number_1_helper') }}</span>
             </div>
+          
             <div class="form-group">
                 <label for="contact_number_2">{{ trans('cruds.user.fields.contact_number_2') }}</label>
                 <input class="form-control {{ $errors->has('contact_number_2') ? 'is-invalid' : '' }}" type="text" name="contact_number_2" id="contact_number_2" value="{{ old('contact_number_2', '') }}">
@@ -100,6 +101,13 @@
                     <span class="text-danger">{{ $errors->first('contact_number_2') }}</span>
                 @endif
                 <span class="help-block">{{ trans('cruds.user.fields.contact_number_2_helper') }}</span>
+            </div>
+            <div class="form-group">
+                <label for="sell_do_user_id">Sell Do User Id</label>
+                <input class="form-control {{ $errors->has('sell_do_user_id') ? 'is-invalid' : '' }}" type="text" name="sell_do_user_id" id="sell_do_user_id" value="{{ old('sell_do_user_id', '') }}">
+                @if($errors->has('sell_do_user_id'))
+                    <span class="text-danger">{{ $errors->first('sell_do_user_id') }}</span>
+                @endif
             </div>
             <div class="form-group">
                 <label for="website">{{ trans('cruds.user.fields.website') }}</label>
@@ -161,8 +169,8 @@
     </div>
 </div>
 @endsection
-@section('scripts')
+{{-- @section('scripts')
 <script>
     @includeIf('admin.users.partials.user_crud_js')
 </script>
-@endsection
+@endsection --}}

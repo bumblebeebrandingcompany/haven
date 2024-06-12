@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
+use App\Models\Lead;
+use App\Models\LeadEvents;
 use App\Utils\Util;
 use Illuminate\Support\Facades\Storage;
 class DocumentController extends Controller
@@ -35,7 +37,9 @@ class DocumentController extends Controller
      */
     public function index(Request $request)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_view')){
+            abort(403, 'Unauthorized.');
+        }
 
         if ($request->ajax()) {
 
@@ -56,10 +60,10 @@ class DocumentController extends Controller
             $table->addColumn('actions', '&nbsp;');
 
             $table->editColumn('actions', function ($row) use($user) {
-                $viewGate      = $user->is_superadmin;
-                $editGate      = $user->is_superadmin;
-                $deleteGate    = $user->is_superadmin;
-                $docGuestViewGate = $user->is_superadmin;
+                $viewGate      = $user->checkPermission('document_view');
+                $editGate      = $user->checkPermission('document_edit');
+                $deleteGate    = $user->checkPermission('document_delete');
+                $docGuestViewGate = $user->checkPermission('document_view');
                 $docGuestViewUrl = $this->util->generateGuestDocumentViewUrl($row->id);
                 $crudRoutePart = 'documents';
 
@@ -103,8 +107,10 @@ class DocumentController extends Controller
      */
     public function create()
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
-
+        if(!auth()->user()->checkPermission('document_create')){
+            abort(403, 'Unauthorized.');
+        }
+        
         $projects  = Project::pluck('name', 'id')
                         ->toArray();
 
@@ -117,7 +123,9 @@ class DocumentController extends Controller
      */
     public function store(StoreDocumentRequest $request)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_create')){
+            abort(403, 'Unauthorized.');
+        }
 
         $input = $request->except(['_token']);
         $input['created_by'] = auth()->user()->id;
@@ -132,7 +140,9 @@ class DocumentController extends Controller
      */
     public function show(Document $document)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_view')){
+            abort(403, 'Unauthorized.');
+        }
 
         $document->load('project', 'createdBy');
 
@@ -144,7 +154,9 @@ class DocumentController extends Controller
      */
     public function edit(Document $document)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_edit')){
+            abort(403, 'Unauthorized.');
+        }
 
         $projects  = Project::pluck('name', 'id')
                         ->toArray();
@@ -158,7 +170,9 @@ class DocumentController extends Controller
      */
     public function update(UpdateDocumentRequest $request, Document $document)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_edit')){
+            abort(403, 'Unauthorized.');
+        }
 
         $input = $request->except(['_method', '_token']);
         $files = $this->uploadFiles($request);
@@ -176,8 +190,15 @@ class DocumentController extends Controller
      */
     public function destroy(Document $document)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_delete')){
+            abort(403, 'Unauthorized.');
+        }
 
+        if(!empty($document->files)) {
+            foreach ($document->files as $file) {
+                $this->__unlinkFile($file);
+            }
+        }
         $document->delete();
 
         return back();
@@ -185,11 +206,21 @@ class DocumentController extends Controller
 
     public function massDestroy()
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!auth()->user()->checkPermission('document_delete')){
+            abort(403, 'Unauthorized.');
+        }
 
-        Document::whereIn('id', request('ids'))
-            ->delete();
-
+        $documents = Document::whereIn('id', request('ids'))
+                    ->get();
+                    
+        foreach ($documents as $document) {
+            if(!empty($document->files)) {
+                foreach ($document->files as $file) {
+                    $this->__unlinkFile($file);
+                }
+            }
+            $document->delete();
+        }
         return back();
     }
 
@@ -203,7 +234,9 @@ class DocumentController extends Controller
 
     public function storeCKEditorImages(Request $request)
     {
-        abort_if(!auth()->user()->is_superadmin, Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!(auth()->user()->checkPermission('document_create') || auth()->user()->checkPermission('document_edit'))){
+            abort(403, 'Unauthorized.');
+        }
 
         $model         = new Document();
         $model->id     = $request->input('crud_id', 0);
@@ -237,14 +270,8 @@ class DocumentController extends Controller
         try {
 
             $file_name = $request->input('file');
-
             $document = Document::findOrFail($id);
-
-            $file_path = storage_path('app/public/'.config('constants.document_files_path'));
-            if (!empty($file_name) && file_exists($file_path . "/" . $file_name)) {
-                unlink($file_path . "/" . $file_name);
-            }
-
+            $this->__unlinkFile($file_name);
             $filteredFiles = array_diff($document->files, [$file_name]);
             $document->files = $filteredFiles ?? [];
             $document->save();
@@ -254,5 +281,43 @@ class DocumentController extends Controller
             $msg = 'File:'.$e->getFile().' | Line:'.$e->getLine().' | Message:'.$e->getMessage();
             return response()->json(['success' => false, 'message' => __('messages.something_went_wrong')], 404); 
         }
+    }
+
+    protected function __unlinkFile($file_name)
+    {
+        $file_path = storage_path('app/public/'.config('constants.document_files_path'));
+        if (!empty($file_name) && file_exists($file_path . "/" . $file_name)) {
+            unlink($file_path . "/" . $file_name);
+        }
+    }
+
+    public function getFilteredDocuments(Request $request)
+    {
+        if($request->ajax()) {
+            $query = new Document();
+            if(!empty($request->get('project_id'))) {
+                $query = $query->where('project_id', $request->get('project_id'));
+            }
+            $documents = $query->get();
+            $lead = Lead::findOrFail($request->get('lead_id'));
+            return view('admin.leads.partials.document_card')
+                ->with(compact('documents', 'lead'));
+        }
+    }
+
+    public function getDocumentLogs(Request $request)
+    {   
+        if(!auth()->user()->checkPermission('document_send')){
+            abort(403, 'Unauthorized.');
+        }
+
+        $activities = LeadEvents::with(['lead'])
+                        ->where('event_type', 'document_sent')
+                        ->select(['webhook_data', 'lead_id', 'sell_do_lead_id', 'created_at'])
+                        ->orderBy('created_at', 'desc')
+                        ->simplePaginate(30);
+                        
+        return view('admin.documents.log')
+            ->with(compact('activities'));
     }
 }

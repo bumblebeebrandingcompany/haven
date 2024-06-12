@@ -1,6 +1,6 @@
 let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
 dtButtons.splice(4, 1);//remove excel button
-@if(auth()->user()->is_superadmin)
+@if(auth()->user()->checkPermission('lead_delete'))
     let deleteButtonTrans = '{{ trans('global.datatables.delete') }}';
     let deleteButton = {
         text: deleteButtonTrans,
@@ -37,7 +37,7 @@ let dtOverrideGlobals = {
     retrieve: true,
     aaSorting: [],
     ajax: {
-        url: "{{ route('admin.leads.index') }}",
+        url: "{{ route('admin.leads.lead', [$project->id]) }}",
         data: function (d) {
             d.project_id = $("#project_id").val();
             d.campaign_id = $("#campaign_id").val();
@@ -72,7 +72,7 @@ let dtOverrideGlobals = {
         { data: 'actions', name: '{{ trans('global.actions') }}' }
     ],
     orderCellsTop: true,
-    order: [[ 14, 'desc' ]],
+    order: [[ 15, 'desc' ]],
     pageLength: 50,
 };
 let table = $('.datatable-Lead').DataTable(dtOverrideGlobals);

@@ -12,16 +12,14 @@ class StoreLeadRequest extends FormRequest
 {
     public function authorize()
     {
-        return auth()->user()->is_superadmin || auth()->user()->is_channel_partner;
+        return auth()->user()->checkPermission('lead_create');
     }
 
     public function rules()
     {
         $project_id = request()->input('project_id');
         return [
-            'name' => [
-                'required'
-            ],
+       
             'email' => [
                 auth()->user()->is_superadmin ? '' : 'required',
                 auth()->user()->is_superadmin ? '' : 'email',
@@ -35,10 +33,6 @@ class StoreLeadRequest extends FormRequest
                     return $query->whereNotNull('phone')->where('project_id', $project_id);
                 }),
             ],
-            'project_id' => [
-                'required',
-                'integer',
-            ]
         ];
     }
 }

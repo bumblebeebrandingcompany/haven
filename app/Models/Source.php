@@ -16,13 +16,32 @@ class Source extends Model
     public static $searchable = [
         'name',
     ];
-
+    protected $fillable = [
+        'custom_fields',
+        'essential_fields',
+        'sell_do_fields',
+        'sales_fields',
+        'system_fields',
+        'project_id',
+        'campaign_id',
+        'webhook_secret',
+        'is_cp_source',
+        'name'
+    ];
     protected $dates = [
         'created_at',
         'updated_at',
         'deleted_at',
     ];
-    
+    protected $casts = [
+        'custom_fields' => 'array',
+        'essential_fields'=>'array',
+        'sell_do_fields'=>'array',
+        'sales_fields'  => 'array',
+        'system_fields' => 'array',
+        'inbox_fields' => 'array',
+        'project_id'=>'array'
+    ];
     /**
      * The attributes that aren't mass assignable.
      *
@@ -44,4 +63,8 @@ class Source extends Model
     {
         return $this->belongsTo(Campaign::class, 'campaign_id');
     }
+    public function subSources()
+    {
+        return $this->hasMany(SubSource::class, 'source_id');
+    }   
 }
